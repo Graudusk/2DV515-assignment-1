@@ -1,14 +1,15 @@
 <% include partials/header %>
 <main class="container text-center">
-  <h2>Recommend users for <%=data.user.name%></h2>
+  <h2>Recommend users for <%= data.user && data.user.name %></h2>
   <% include partials/recommendForm %>
+  <% if (data.comparedUsers) { -%>
   <table>
     <tr>
       <th>User</th>
       <th>Id</th>
       <th>Score</th>
     </tr>
-    <% for (const user of data.weightedUserScores) { -%>
+    <% for (const user of data.comparedUsers) { -%>
     <tr>
       <th><%=user.Name%></th>
       <th><%=user.UserId%></th>
@@ -16,5 +17,8 @@
     </tr>
     <% } -%>
   </table>
+  <% } else { -%>
+    
+  <% } -%>
 </main>
 <% include partials/footer %>

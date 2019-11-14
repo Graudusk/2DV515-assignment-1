@@ -35,11 +35,12 @@ app.get('/recommend-user', async (req, res) => {
     req.query && req.query.user ? req.query.user : 1,
     req.query && req.query.count ? req.query.count : 3
   );
-  const data = await movies.getWeightedMovieScores(
-    req.query.user || 1,
-    req.query.count || 3
+  const data = await movies.getUserRecommendations(
+    // const data = await movies.getWeightedMovieScores(
+    req.query.user,
+    req.query.count
   );
-  console.log(data);
+  // console.log(data);
   res.end(JSON.stringify(data, null, 2));
   // res.end(JSON.stringify(data, null, 2));
 });
@@ -50,7 +51,7 @@ app.get('/recommend-movies', async (req, res) => {
     req.query.user,
     req.query.count
   );
-  // console.log(data);
+  console.log(data);
   res.end(JSON.stringify(data, null, 2));
   // res.end(JSON.stringify(data, null, 2));
 });

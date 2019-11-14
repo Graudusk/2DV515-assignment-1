@@ -61,6 +61,34 @@ getUser = async userId => {
   return null;
 };
 
+getUserRecommendations = async (userId, count) => {
+  const userRatings = await getUserRatings();
+  const currentUser = await getUser(userId);
+  const comparedUsers = [];
+  for (const userRating of userRatings) {
+    if (currentUser && currentUser.UserId != userRating.UserId) {
+      comparedUsers.push({
+        ...userRating,
+        // similarity: await euclideanDistance(currentUser, userRating),
+        similarity: roundDecimals(
+          await euclideanDistance(currentUser, userRating),
+          4
+        ),
+      });
+    }
+  }
+  comparedUsers.sort((b, a) => {
+    if (a.similarity < b.similarity) return -1;
+    if (a.similarity > b.similarity) return 1;
+    return 0;
+  });
+  return {
+    comparedUsers: comparedUsers.slice(0, count),
+    ...currentUser,
+    users: await getUsers(),
+  };
+};
+
 getCompareUserScores = async (userId, count) => {
   const userRatings = await getUserRatings();
   const currentUser = await getUser(userId);
@@ -70,9 +98,11 @@ getCompareUserScores = async (userId, count) => {
     if (currentUser && currentUser.UserId != userRating.UserId) {
       comparedUsers.push({
         ...userRating,
-        similarity:
-          Math.round((await euclideanDistance(currentUser, userRating)) * 100) /
-          100,
+        similarity: await euclideanDistance(currentUser, userRating),
+        // similarity: roundDecimals(
+        //   await euclideanDistance(currentUser, userRating),
+        //   4
+        // ),
       });
     }
   }
@@ -83,58 +113,69 @@ getCompareUserScores = async (userId, count) => {
   });
   return { comparedUsers: comparedUsers.slice(0, count), ...currentUser };
 };
+
+roundDecimals = (number, dec) => {
+  const decimal = '1' + '0'.repeat(dec);
+  return Math.round(number * decimal) / decimal;
+};
+
 getWeightedMovieScores = async (userId, count) => {
   const comparedUserScores = await getCompareUserScores(userId, count);
   const weightedUserScores = [];
   const movies = await getMovies();
-  // console.log('movies', movies);
   const weightedRatings = [];
+  const weightedMovieScores = [];
+
   for (const user of comparedUserScores.comparedUsers) {
-    // console.log(user);
     for (const rating of user.ratings) {
       const movie = await getMovie(rating.MovieId);
       weightedRatings.push({
         user: user.Name,
         sim: user.similarity,
         ...movie,
-        weightedScore: Math.round(rating.Rating * user.similarity * 100) / 100,
+        weightedScore: rating.Rating * user.similarity,
+        // weightedScore: roundDecimals(rating.Rating * user.similarity, 100),
         rating: rating.Rating,
       });
     }
-    // console.log(user);
-    // console.log('weightedRatings', weightedRatings);
-    // weightedUserScores.push({
-    //   name: user.Name,
-    //   id: user.UserId,
-    //   weightedRatings,
-    // });
+
     weightedUserScores.push(weightedRatings);
   }
-
-  fs.writeFile(
-    'test.json',
-    JSON.stringify(weightedRatings, null, 2),
-    function() {}
-  );
-
-  const weightedMovieScores = [];
 
   for (const movie of movies) {
     let weightedScoreSum = 0;
     let similaritySum = 0;
     for (const ws of weightedRatings) {
       if (movie.MovieId === ws.MovieId) {
-        console.log('ws', ws);
+        // console.log('ws', ws);
+        weightedScoreSum += ws.weightedScore;
+        similaritySum += ws.sim;
       }
     }
+    weightedMovieScores.push({
+      id: movie.MovieId,
+      movie: movie.Title,
+      weightedScoreSum: roundDecimals(weightedScoreSum, 4),
+      similaritySum: roundDecimals(similaritySum, 4),
+      similarityScore: roundDecimals(weightedScoreSum / similaritySum, 4),
+      // weightedScoreSum: weightedScoreSum,
+      // similaritySum: similaritySum,
+      // similarityScore: weightedScoreSum / similaritySum,
+    });
   }
+
+  weightedMovieScores.sort((b, a) => {
+    if (a.similarityScore < b.similarityScore) return -1;
+    if (a.similarityScore > b.similarityScore) return 1;
+    return 0;
+  });
 
   return {
     user: { id: comparedUserScores.UserId, name: comparedUserScores.Name },
-    weightedUserScores,
+    weightedMovieScores: weightedMovieScores.slice(0, count),
     users: await getUsers(),
   };
-  return weightedUserScores;
+  return weightedUserScores.slice(0, count);
 };
 
 getWeightedMovieScores2 = async (userId, count) => {
@@ -147,7 +188,8 @@ getWeightedMovieScores2 = async (userId, count) => {
     for (const rating of user.ratings) {
       weightedRatings.push({
         ...rating,
-        weightedScore: Math.round(rating.Rating * user.similarity * 100) / 100,
+        weightedScore: rating.Rating * user.similarity,
+        // weightedScore: Math.round(rating.Rating * user.similarity * 100) / 100,
       });
     }
     console.table(weightedRatings);
@@ -235,4 +277,6 @@ module.exports = {
   getRatings,
   getWeightedMovieScores,
   getCompareUserScores,
+  getWeightedMovieScores2,
+  getUserRecommendations,
 };

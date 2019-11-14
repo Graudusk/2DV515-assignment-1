@@ -26,8 +26,8 @@ router.get('/', async (req, res) => {
 
 router.get('/recommend-user', async (req, res) => {
   let data = {
-    user: req.query.user || null,
-    count: req.query.count || null,
+    user: req.query.user,
+    count: req.query.count,
   };
   console.log(data);
   const usersRatings = await fetch(
