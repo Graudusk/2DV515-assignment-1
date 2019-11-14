@@ -1,0 +1,29 @@
+<div class="drawer">
+    <ul>
+        <!-- <li class="nav-item <%= (page == '/' ? 'active' : '') %>">
+            <a class="nav-link" href="/"><i class="fas fa-fw fa-home fa-lg"></i>&nbsp;&nbsp;&nbsp;Home</a>
+        </li> -->
+        <!-- <li class="nav-item <%= (page == '/about' ? 'active' : '') %>">
+            <a class="nav-link" href="/about">Om</a>
+        </li> -->
+        <!-- <li class="nav-item <%= (page == '/news' ? 'active' : '') %>">
+            <a class="nav-link" href="/news"><i class="fas fa-fw fa-newspaper fa-lg"></i>&nbsp;&nbsp;&nbsp;News</a>
+        </li> -->
+        <li class="nav-item <%= (page == '/about' ? 'active' : '') %>">
+            <a class="nav-link" href="/about"><i class="fas fa-fw fa-info-circle fa-lg"></i>&nbsp;&nbsp;&nbsp;About</a>
+        </li>
+
+        <% if (!data.user) { -%>
+            <li class="nav-item <%= (page == '/login' ? 'active' : '') %>">
+                <a class="nav-link" href="/login"><i class="fas fa-fw fa-key fa-lg"></i>&nbsp;&nbsp;&nbsp;Log in</a>
+            </li>
+            <li class="nav-item <%= (page == '/register' ? 'active' : '') %>">
+                <a class="nav-link" href="/register"><i class="fas fa-fw fa-user-plus fa-lg"></i>&nbsp;&nbsp;&nbsp;Register</a>
+            </li>
+        <% } else { -%>
+            <li class="nav-item <%= (page == 'login/logout' ? 'active' : '') %>">
+                <a class="nav-link" href="login/logout"><i class="fas fa-fw fa-key fa-lg"></i>&nbsp;&nbsp;&nbsp;Log out</a>
+            </li>
+        <% } -%>
+    </ul>
+</div>

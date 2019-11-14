@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= data.title %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> 
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="toucheffects.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.12/css/all.css" integrity="sha384-G0fIWCsCzJIMAVNQPfjH08cyYaUtMwjJwqiRKxxE/rx96Uroj1BtIQ6MLJuheaO9" crossorigin="anonymous">
+</head>
+<body class="">
+
+<header>
+    <% // include ../partials/navbar %>
+</header>
+<div class="backfill"></div>
+<div class="menu">
+    <% //include ../partials/menu %>
+</div>
+
+<% if (data.error) { -%>
+    <div class="error-msg"><%=data.error%></div>
+<% } -%>
+
+<% if (data.msg) { -%>
+    <div class="msg"><%=data.msg%></div>
+<% } -%>

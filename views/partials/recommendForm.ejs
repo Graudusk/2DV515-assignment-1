@@ -1,0 +1,16 @@
+<form method="GET" action="/recommend-user">
+  <p>
+    <label for="name">User</label>
+    <select id="name"name="user">
+      <% for (const user of data.users) { -%>
+    
+        <option <%=data.user && user.UserId == data.user.id ? 'selected=""' : ''%> value="<%=user.UserId%>"><%=user.Name%></option>
+      <% } -%>
+    </select>
+  </p>
+  <p>
+    <label for="name">Count</label>
+    <input type="text" name="count" value="<%=data.count ? data.count : "3"%>">
+  </p>
+  <button type="submit">Get</button>
+</form>
