@@ -1,5 +1,6 @@
 <% include partials/header %>
 <main class="container text-center">
+  <a href="/">Home</a>
   <% if (data.user) { -%>
     <h2>Recommend movies for <%=data.user.name%></h2>
     <% include partials/recommendForm %>

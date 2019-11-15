@@ -69,7 +69,6 @@ getUserRecommendations = async (userId, count) => {
     if (currentUser && currentUser.UserId != userRating.UserId) {
       comparedUsers.push({
         ...userRating,
-        // similarity: await euclideanDistance(currentUser, userRating),
         similarity: roundDecimals(
           await euclideanDistance(currentUser, userRating),
           4
@@ -92,17 +91,13 @@ getUserRecommendations = async (userId, count) => {
 getCompareUserScores = async (userId, count) => {
   const userRatings = await getUserRatings();
   const currentUser = await getUser(userId);
-  // console.log(currentUser);
   const comparedUsers = [];
+
   for (const userRating of userRatings) {
     if (currentUser && currentUser.UserId != userRating.UserId) {
       comparedUsers.push({
         ...userRating,
         similarity: await euclideanDistance(currentUser, userRating),
-        // similarity: roundDecimals(
-        //   await euclideanDistance(currentUser, userRating),
-        //   4
-        // ),
       });
     }
   }
@@ -111,7 +106,7 @@ getCompareUserScores = async (userId, count) => {
     if (a.similarity > b.similarity) return 1;
     return 0;
   });
-  return { comparedUsers: comparedUsers.slice(0, count), ...currentUser };
+  return { comparedUsers: comparedUsers, ...currentUser };
 };
 
 roundDecimals = (number, dec) => {
@@ -128,15 +123,17 @@ getWeightedMovieScores = async (userId, count) => {
 
   for (const user of comparedUserScores.comparedUsers) {
     for (const rating of user.ratings) {
-      const movie = await getMovie(rating.MovieId);
-      weightedRatings.push({
-        user: user.Name,
-        sim: user.similarity,
-        ...movie,
-        weightedScore: rating.Rating * user.similarity,
-        // weightedScore: roundDecimals(rating.Rating * user.similarity, 100),
-        rating: rating.Rating,
-      });
+      if (userId != rating.UserId) {
+        const movie = await getMovie(rating.MovieId);
+        weightedRatings.push({
+          user: user.Name,
+          userId: user.UserId,
+          sim: user.similarity,
+          ...movie,
+          weightedScore: rating.Rating * user.similarity,
+          rating: rating.Rating,
+        });
+      }
     }
 
     weightedUserScores.push(weightedRatings);
@@ -146,8 +143,7 @@ getWeightedMovieScores = async (userId, count) => {
     let weightedScoreSum = 0;
     let similaritySum = 0;
     for (const ws of weightedRatings) {
-      if (movie.MovieId === ws.MovieId) {
-        // console.log('ws', ws);
+      if (movie.MovieId === ws.MovieId && userId != ws.userId) {
         weightedScoreSum += ws.weightedScore;
         similaritySum += ws.sim;
       }
@@ -158,70 +154,32 @@ getWeightedMovieScores = async (userId, count) => {
       weightedScoreSum: roundDecimals(weightedScoreSum, 4),
       similaritySum: roundDecimals(similaritySum, 4),
       similarityScore: roundDecimals(weightedScoreSum / similaritySum, 4),
-      // weightedScoreSum: weightedScoreSum,
-      // similaritySum: similaritySum,
-      // similarityScore: weightedScoreSum / similaritySum,
     });
   }
 
-  weightedMovieScores.sort((b, a) => {
-    if (a.similarityScore < b.similarityScore) return -1;
-    if (a.similarityScore > b.similarityScore) return 1;
-    return 0;
-  });
-
+  const filteredWeightedMovieScores = comparedUserScores.ratings
+    ? weightedMovieScores.filter(
+        ({ id }) =>
+          !comparedUserScores.ratings.map(({ MovieId }) => MovieId).includes(id)
+      )
+    : [];
   return {
     user: { id: comparedUserScores.UserId, name: comparedUserScores.Name },
-    weightedMovieScores: weightedMovieScores.slice(0, count),
+    weightedMovieScores: filteredWeightedMovieScores
+      .sort((b, a) => {
+        if (a.similarityScore < b.similarityScore) return -1;
+        if (a.similarityScore > b.similarityScore) return 1;
+        return 0;
+      })
+      .slice(0, count),
     users: await getUsers(),
   };
-  return weightedUserScores.slice(0, count);
 };
 
-getWeightedMovieScores2 = async (userId, count) => {
-  const comparedUserScores = await getCompareUserScores(userId, count);
-  const weightedUserScores = [];
-  const movies = await getMovies();
-  console.log('movies', movies);
-  for (const user of comparedUserScores.comparedUsers) {
-    const weightedRatings = [];
-    for (const rating of user.ratings) {
-      weightedRatings.push({
-        ...rating,
-        weightedScore: rating.Rating * user.similarity,
-        // weightedScore: Math.round(rating.Rating * user.similarity * 100) / 100,
-      });
-    }
-    console.table(weightedRatings);
-    console.log();
-    weightedUserScores.push({
-      ...user,
-      weightedRatings,
-    });
-  }
-
-  fs.writeFile(
-    'test.json',
-    JSON.stringify(weightedUserScores, null, 2),
-    function() {}
-  );
-
-  const weightedMovieScores = [];
-
-  for (const movie of movies) {
-  }
-
-  return {
-    user: { id: comparedUserScores.UserId, name: comparedUserScores.Name },
-    weightedUserScores,
-    users: await getUsers(),
-  };
-  return weightedUserScores;
-};
 getMovies = async () => {
   const data = await fs.promises.readFile(
-    __dirname + '/../db/example/movies.csv',
-    // __dirname + '/../db/movies.csv',
+    // __dirname + '/../db/example/movies.csv',
+    __dirname + '/../db/movies.csv',
     'utf8',
     async function(err, csvData) {
       return csvData;
@@ -237,8 +195,8 @@ getMovies = async () => {
 
 getUsers = async () => {
   const data = await fs.promises.readFile(
-    __dirname + '/../db/example/users.csv',
-    // __dirname + '/../db/users.csv',
+    // __dirname + '/../db/example/users.csv',
+    __dirname + '/../db/users.csv',
     'utf8',
     async function(err, csvData) {
       return csvData;
@@ -254,8 +212,8 @@ getUsers = async () => {
 
 getRatings = async () => {
   const data = await fs.promises.readFile(
-    __dirname + '/../db/example/ratings.csv',
-    // __dirname + '/../db/ratings.csv',
+    // __dirname + '/../db/example/ratings.csv',
+    __dirname + '/../db/ratings.csv',
     'utf8',
     async function(err, csvData) {
       return csvData;
@@ -268,7 +226,6 @@ getRatings = async () => {
     trim: true,
   });
 };
-getWeightedMovieScores(4);
 module.exports = {
   euclideanDistance,
   getUserRatings,
@@ -277,6 +234,5 @@ module.exports = {
   getRatings,
   getWeightedMovieScores,
   getCompareUserScores,
-  getWeightedMovieScores2,
   getUserRecommendations,
 };

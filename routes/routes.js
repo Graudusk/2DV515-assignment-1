@@ -16,8 +16,6 @@ router.get('/', async (req, res) => {
     response.json()
   );
 
-  console.log(users);
-
   res.render('home', {
     data: { ...data, users: users },
     page: req.url,
@@ -29,15 +27,12 @@ router.get('/recommend-user', async (req, res) => {
     user: req.query.user,
     count: req.query.count,
   };
-  console.log(data);
   const usersRatings = await fetch(
     'http://localhost:1337/recommend-user?' + new URLSearchParams(data)
   ).then(response => response.json());
 
-  data = { ...data, title: 'recommend' };
-
   res.render('recommendUser', {
-    data: { ...data, ...usersRatings },
+    data: { ...data, ...usersRatings, title: 'Recommended Users' },
     page: req.url,
   });
 });
@@ -51,10 +46,8 @@ router.get('/recommend-movies', async (req, res) => {
     'http://localhost:1337/recommend-movies?' + new URLSearchParams(data)
   ).then(response => response.json());
 
-  data = { ...data, title: 'recommend' };
-
   res.render('recommendMovies', {
-    data: { ...data, ...moviesRatings },
+    data: { ...data, ...moviesRatings, title: 'Recommended Movies' },
     page: req.url,
   });
 });
