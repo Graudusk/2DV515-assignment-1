@@ -4,7 +4,7 @@
     <select id="name"name="user">
       <% for (const user of data.users) { -%>
     
-        <option <%=data.user && user.UserId == data.user.id ? 'selected=""' : ''%> value="<%=user.UserId%>"><%=user.Name%></option>
+        <option <%=data.user && user.UserId == data.user.UserId ? 'selected=""' : ''%> value="<%=user.UserId%>"><%=user.Name%></option>
       <% } -%>
     </select>
   </p>

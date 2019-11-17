@@ -83,7 +83,7 @@ getUserRecommendations = async (userId, count) => {
   });
   return {
     comparedUsers: comparedUsers.slice(0, count),
-    ...currentUser,
+    user: { ...currentUser },
     users: await getUsers(),
   };
 };
@@ -164,7 +164,7 @@ getWeightedMovieScores = async (userId, count) => {
       )
     : [];
   return {
-    user: { id: comparedUserScores.UserId, name: comparedUserScores.Name },
+    user: { UserId: comparedUserScores.UserId, name: comparedUserScores.Name },
     weightedMovieScores: filteredWeightedMovieScores
       .sort((b, a) => {
         if (a.similarityScore < b.similarityScore) return -1;
@@ -227,7 +227,6 @@ getRatings = async () => {
   });
 };
 module.exports = {
-  euclideanDistance,
   getUserRatings,
   getMovies,
   getUsers,
