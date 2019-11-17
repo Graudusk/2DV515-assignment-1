@@ -3,6 +3,40 @@ const util = require('util');
 const csvParse = require('csv-parse');
 const csvParsePromise = util.promisify(csvParse);
 
+pearson = (userA, userB) => {
+  let sum1 = 0;
+  let sum2 = 0;
+  let sum1sq = 0;
+  let sum2sq = 0;
+  let pSum = 0;
+  let n = 0;
+
+  for (const rA of userA.ratings) {
+    for (const rB of userB.ratings) {
+      if (rA.MovieId == rB.MovieId) {
+        sum1 += parseInt(rA.Rating);
+        sum2 += parseInt(rB.Rating);
+        sum1sq += Math.pow(rA.Rating, 2);
+        sum2sq += Math.pow(rB.Rating, 2);
+        pSum += parseInt(rA.Rating) * parseInt(rB.Rating);
+        n++;
+      }
+    }
+  }
+
+  // No ratings in common, return 0
+  if (n === 0) {
+    return 0;
+  }
+  const sum2div = sum2 / n;
+  const num = pSum - (sum1 * sum2) / n;
+  const den = Math.sqrt(
+    (sum1sq - Math.pow(sum1, 2) / n) * (sum2sq - Math.pow(sum2, 2) / n)
+  );
+  console.log('similarity', num / den);
+  return num / den;
+};
+
 euclideanDistance = (userA, userB) => {
   let sim = 0;
   let n = 0;
