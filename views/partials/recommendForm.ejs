@@ -1,6 +1,10 @@
 <form method="GET" action="">
   <p>
     <label for="name">User</label>
+    <select id="similarity" name="similarity">
+      <option <%=data.similarity && data.similarity === 'euclidean' ? 'selected=""' : ''%> value="euclidean">Euclidean</option>
+      <option <%=data.similarity && data.similarity === 'pearson' ? 'selected=""' : ''%>  value="pearson">Pearson</option>
+    </select>
     <select id="name"name="user">
       <% for (const user of data.users) { -%>
     
