@@ -1,7 +1,7 @@
 <% include partials/header %>
 <main class="container text-center">
   <a href="/">Home</a>
-  <h2>Recommend users for <%= data.user && data.user.name %></h2>
+  <h2>Recommend users for <%= data.user && data.user.Name %></h2>
   <% include partials/recommendForm %>
   <% if (data.comparedUsers) { -%>
   <table>

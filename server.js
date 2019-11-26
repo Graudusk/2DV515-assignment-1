@@ -30,18 +30,14 @@ app.get('/ratings', async (req, res) => {
 });
 
 app.get('/recommend-user', async (req, res) => {
-  const data = await movies.getUserRecommendations(
-    req.query.user,
-    req.query.count
-  );
+  const data = await movies.getUserRecommendations({ ...req.query });
+  console.log(data);
   res.end(JSON.stringify(data, null, 2));
 });
 
 app.get('/recommend-movies', async (req, res) => {
-  const data = await movies.getWeightedMovieScores(
-    req.query.user,
-    req.query.count
-  );
+  const data = await movies.getWeightedMovieScores({ ...req.query });
+  console.log(data);
   res.end(JSON.stringify(data, null, 2));
 });
 

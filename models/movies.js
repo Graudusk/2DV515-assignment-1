@@ -2,6 +2,8 @@ const fs = require('fs');
 const util = require('util');
 const csvParse = require('csv-parse');
 const csvParsePromise = util.promisify(csvParse);
+const dbDir = __dirname + '/../db/example/';
+// __dirname + '/../db/users.csv',
 
 pearson = (userA, userB) => {
   let sum1 = 0;
@@ -14,11 +16,12 @@ pearson = (userA, userB) => {
   for (const rA of userA.ratings) {
     for (const rB of userB.ratings) {
       if (rA.MovieId == rB.MovieId) {
-        sum1 += parseInt(rA.Rating);
-        sum2 += parseInt(rB.Rating);
-        sum1sq += Math.pow(rA.Rating, 2);
-        sum2sq += Math.pow(rB.Rating, 2);
-        pSum += parseInt(rA.Rating) * parseInt(rB.Rating);
+        sum1 += parseFloat(rA.Rating);
+        sum2 += parseFloat(rB.Rating);
+
+        sum1sq += Math.pow(parseFloat(rA.Rating), 2);
+        sum2sq += Math.pow(parseFloat(rB.Rating), 2);
+        pSum += parseFloat(rA.Rating) * parseFloat(rB.Rating);
         n++;
       }
     }
@@ -33,7 +36,6 @@ pearson = (userA, userB) => {
   const den = Math.sqrt(
     (sum1sq - Math.pow(sum1, 2) / n) * (sum2sq - Math.pow(sum2, 2) / n)
   );
-  console.log('similarity', num / den);
   return num / den;
 };
 
@@ -95,16 +97,18 @@ getUser = async userId => {
   return null;
 };
 
-getUserRecommendations = async (userId, count) => {
+getUserRecommendations = async ({ user, count, similarity }) => {
   const userRatings = await getUserRatings();
-  const currentUser = await getUser(userId);
+  const currentUser = await getUser(user);
   const comparedUsers = [];
   for (const userRating of userRatings) {
     if (currentUser && currentUser.UserId != userRating.UserId) {
       comparedUsers.push({
         ...userRating,
         similarity: roundDecimals(
-          await euclideanDistance(currentUser, userRating),
+          similarity === 'pearson'
+            ? await pearson(currentUser, userRating)
+            : await euclideanDistance(currentUser, userRating),
           4
         ),
       });
@@ -122,7 +126,7 @@ getUserRecommendations = async (userId, count) => {
   };
 };
 
-getCompareUserScores = async (userId, count) => {
+getCompareUserScores = async (userId, count, similarity) => {
   const userRatings = await getUserRatings();
   const currentUser = await getUser(userId);
   const comparedUsers = [];
@@ -131,7 +135,12 @@ getCompareUserScores = async (userId, count) => {
     if (currentUser && currentUser.UserId != userRating.UserId) {
       comparedUsers.push({
         ...userRating,
-        similarity: await euclideanDistance(currentUser, userRating),
+        similarity: roundDecimals(
+          similarity === 'pearson'
+            ? await pearson(currentUser, userRating)
+            : await euclideanDistance(currentUser, userRating),
+          4
+        ),
       });
     }
   }
@@ -148,8 +157,12 @@ roundDecimals = (number, dec) => {
   return Math.round(number * decimal) / decimal;
 };
 
-getWeightedMovieScores = async (userId, count) => {
-  const comparedUserScores = await getCompareUserScores(userId, count);
+getWeightedMovieScores = async ({ user, count, similarity }) => {
+  const comparedUserScores = await getCompareUserScores(
+    user,
+    count,
+    similarity
+  );
   const weightedUserScores = [];
   const movies = await getMovies();
   const weightedRatings = [];
@@ -157,7 +170,7 @@ getWeightedMovieScores = async (userId, count) => {
 
   for (const user of comparedUserScores.comparedUsers) {
     for (const rating of user.ratings) {
-      if (userId != rating.UserId) {
+      if (user != rating.UserId && user.similarity > 0) {
         const movie = await getMovie(rating.MovieId);
         weightedRatings.push({
           user: user.Name,
@@ -177,7 +190,7 @@ getWeightedMovieScores = async (userId, count) => {
     let weightedScoreSum = 0;
     let similaritySum = 0;
     for (const ws of weightedRatings) {
-      if (movie.MovieId === ws.MovieId && userId != ws.userId) {
+      if (movie.MovieId === ws.MovieId && user != ws.userId) {
         weightedScoreSum += ws.weightedScore;
         similaritySum += ws.sim;
       }
@@ -212,8 +225,7 @@ getWeightedMovieScores = async (userId, count) => {
 
 getMovies = async () => {
   const data = await fs.promises.readFile(
-    // __dirname + '/../db/example/movies.csv',
-    __dirname + '/../db/movies.csv',
+    dbDir + 'movies.csv',
     'utf8',
     async function(err, csvData) {
       return csvData;
@@ -229,8 +241,7 @@ getMovies = async () => {
 
 getUsers = async () => {
   const data = await fs.promises.readFile(
-    // __dirname + '/../db/example/users.csv',
-    __dirname + '/../db/users.csv',
+    dbDir + 'users.csv',
     'utf8',
     async function(err, csvData) {
       return csvData;
@@ -246,8 +257,7 @@ getUsers = async () => {
 
 getRatings = async () => {
   const data = await fs.promises.readFile(
-    // __dirname + '/../db/example/ratings.csv',
-    __dirname + '/../db/ratings.csv',
+    dbDir + 'ratings.csv',
     'utf8',
     async function(err, csvData) {
       return csvData;

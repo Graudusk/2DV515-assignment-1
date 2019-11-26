@@ -22,10 +22,7 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/recommend-user', async (req, res) => {
-  let data = {
-    user: req.query.user,
-    count: req.query.count,
-  };
+  let data = { ...req.query };
   const usersRatings = await fetch(
     'http://localhost:1337/recommend-user?' + new URLSearchParams(data)
   ).then(response => response.json());
@@ -37,10 +34,7 @@ router.get('/recommend-user', async (req, res) => {
 });
 
 router.get('/recommend-movies', async (req, res) => {
-  let data = {
-    user: req.query.user,
-    count: req.query.count,
-  };
+  let data = { ...req.query };
   const moviesRatings = await fetch(
     'http://localhost:1337/recommend-movies?' + new URLSearchParams(data)
   ).then(response => response.json());
